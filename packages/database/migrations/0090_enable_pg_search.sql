@@ -5,11 +5,20 @@
 -- visibly at query time when its extension or BM25 indexes are absent.
 -- Editing this shipped migration is safe: Drizzle only compares `created_at`, so databases
 -- that already applied it never re-run it.
+
 DO $$
 BEGIN
-  IF EXISTS (SELECT 1 FROM pg_available_extensions WHERE name = 'pg_search') THEN
-    CREATE EXTENSION IF NOT EXISTS pg_search;
+  IF EXISTS (
+    SELECT 1 FROM pg_available_extensions
+    WHERE name = 'pg_search'
+  ) THEN
+    BEGIN
+      CREATE EXTENSION IF NOT EXISTS pg_search;
+    EXCEPTION
+      WHEN insufficient_privilege OR feature_not_supported THEN
+        RAISE NOTICE 'pg_search unavailable; skipping';
+    END;
   ELSE
-    RAISE NOTICE 'pg_search is not available on this database; skipping BM25 search setup';
+    RAISE NOTICE 'pg_search not available; skipping';
   END IF;
 END $$;
