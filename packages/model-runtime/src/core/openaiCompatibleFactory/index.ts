@@ -72,6 +72,7 @@ import {
   convertOpenAIUsage,
 } from '../usageConverters/openai';
 import { OpenAICompatibleClient } from './client';
+import { createEmbeddingRequest } from './createEmbeddingRequest';
 import { createOpenAICompatibleImage } from './createImage';
 import { createOpenAICompatibleVideo, pollOpenAICompatibleVideoStatus } from './createVideo';
 import { createDecision } from './decide';
@@ -1142,10 +1143,9 @@ export const createOpenAICompatibleRuntime = <T extends Record<string, any> = an
         payload.model,
         Array.isArray(payload.input) ? payload.input.length : 1,
       );
-
       try {
         const res = await this.client.embeddings.create(
-          { ...requestPayload, encoding_format: 'float', user: options?.user },
+          createEmbeddingRequest(requestPayload, this.baseURL, options?.user),
           { headers: options?.headers, signal: options?.signal },
         );
 
